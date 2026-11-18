@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { connection } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { INITIAL_DEMO_CUSTOMERS, INITIAL_DEMO_CAMPAIGN_LOGS } from "@/lib/demo-data";
 import type { JenisKampanye } from "@/types/database.types";
@@ -16,6 +17,7 @@ export async function getPassiveCustomers(
   minDays: number = 14,
   filterLabel?: string
 ): Promise<PassiveCustomer[]> {
+  await connection();
   try {
     const supabase = await createClient();
     const { data, error } = await supabase

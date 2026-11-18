@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { connection } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { ticketSchema, type TicketFormData } from "@/types/ticket.schema";
 import { INITIAL_DEMO_TICKETS, INITIAL_DEMO_CUSTOMERS } from "@/lib/demo-data";
@@ -13,6 +14,7 @@ const DEMO_TICKETS = INITIAL_DEMO_TICKETS;
  * Fetch all tickets
  */
 export async function getTickets(): Promise<TicketRecord[]> {
+  await connection();
   try {
     const supabase = await createClient();
     const { data, error } = await supabase

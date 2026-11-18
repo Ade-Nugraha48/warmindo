@@ -1,5 +1,6 @@
 "use server";
 
+import { connection } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import {
   INITIAL_DEMO_TICKETS,
@@ -14,6 +15,7 @@ import type { DashboardAnalyticsData } from "@/types/dashboard.record";
  * Fetch and compute overall Dashboard KPI metrics and analytics
  */
 export async function getDashboardAnalytics(): Promise<DashboardAnalyticsData> {
+  await connection();
   try {
     const supabase = await createClient();
 

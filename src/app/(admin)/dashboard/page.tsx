@@ -1,6 +1,7 @@
 import * as React from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getDashboardAnalytics } from "@/app/(admin)/dashboard/actions";
 import { DashboardView } from "@/components/features/DashboardView";
@@ -8,6 +9,7 @@ import { DashboardView } from "@/components/features/DashboardView";
 export const instant = false;
 
 export default async function DashboardPage() {
+  await connection();
   const cookieStore = await cookies();
   const demoRole = cookieStore.get("warmindo_demo_role")?.value;
 

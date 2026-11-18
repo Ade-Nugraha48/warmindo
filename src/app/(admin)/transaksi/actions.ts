@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { connection } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { transactionSchema, type TransactionFormData } from "@/types/transaction.schema";
 import { INITIAL_DEMO_CUSTOMERS, INITIAL_DEMO_TRANSACTIONS } from "@/lib/demo-data";
@@ -51,6 +52,7 @@ export async function searchCustomerByWa(query: string): Promise<Customer[]> {
  * Get all today's transactions
  */
 export async function getTodayTransactions(): Promise<TransactionRecord[]> {
+  await connection();
   try {
     const supabase = await createClient();
     const today = new Date();
