@@ -2,6 +2,11 @@ import type { Customer } from "@/types/database.types";
 import type { TransactionRecord } from "@/types/transaction.record";
 import type { TicketRecord } from "@/types/ticket.record";
 import type { CampaignLogRecord } from "@/types/campaign.record";
+import type {
+  WeeklyTrendData,
+  TopMenuItem,
+  ReactivationMetricItem,
+} from "@/types/dashboard.record";
 
 export const INITIAL_DEMO_CUSTOMERS: Customer[] = [
   {
@@ -218,3 +223,72 @@ export const INITIAL_DEMO_CAMPAIGN_LOGS: CampaignLogRecord[] = [
     berhasil_reaktivasi: true,
   },
 ];
+
+export const INITIAL_DEMO_WA_LOGS = [
+  { id: "WA-01", waktu_pesan_masuk: "2026-11-18T08:00:00Z", waktu_dibalas_admin: "2026-11-18T08:02:45Z", selisih_menit: 2.75 },
+  { id: "WA-02", waktu_pesan_masuk: "2026-11-18T09:15:00Z", waktu_dibalas_admin: "2026-11-18T09:18:30Z", selisih_menit: 3.5 },
+  { id: "WA-03", waktu_pesan_masuk: "2026-11-18T11:30:00Z", waktu_dibalas_admin: "2026-11-18T11:31:40Z", selisih_menit: 1.67 },
+  { id: "WA-04", waktu_pesan_masuk: "2026-11-18T12:45:00Z", waktu_dibalas_admin: "2026-11-18T12:49:00Z", selisih_menit: 4.25 },
+  { id: "WA-05", waktu_pesan_masuk: "2026-11-18T14:10:00Z", waktu_dibalas_admin: "2026-11-18T14:13:20Z", selisih_menit: 3.33 },
+  { id: "WA-06", waktu_pesan_masuk: "2026-11-18T16:20:00Z", waktu_dibalas_admin: "2026-11-18T16:23:50Z", selisih_menit: 3.83 },
+  { id: "WA-07", waktu_pesan_masuk: "2026-11-18T18:05:00Z", waktu_dibalas_admin: "2026-11-18T18:07:30Z", selisih_menit: 2.5 },
+  { id: "WA-08", waktu_pesan_masuk: "2026-11-18T20:40:00Z", waktu_dibalas_admin: "2026-11-18T20:44:10Z", selisih_menit: 4.17 },
+];
+
+export const INITIAL_DEMO_WEEKLY_TRENDS: WeeklyTrendData[] = [
+  { minggu: "W1", label: "01 - 07 Okt", transaksiMember: 68, transaksiNonMember: 110, totalTransaksi: 178, omsetMember: 1156000, totalOmset: 2848000 },
+  { minggu: "W2", label: "08 - 14 Okt", transaksiMember: 82, transaksiNonMember: 118, totalTransaksi: 200, omsetMember: 1394000, totalOmset: 3200000 },
+  { minggu: "W3", label: "15 - 21 Okt", transaksiMember: 96, transaksiNonMember: 122, totalTransaksi: 218, omsetMember: 1680000, totalOmset: 3620000 },
+  { minggu: "W4", label: "22 - 28 Okt", transaksiMember: 120, transaksiNonMember: 125, totalTransaksi: 245, omsetMember: 2160000, totalOmset: 4165000 },
+  { minggu: "W5", label: "29 Okt - 04 Nov", transaksiMember: 145, transaksiNonMember: 130, totalTransaksi: 275, omsetMember: 2682000, totalOmset: 4812000 },
+  { minggu: "W6", label: "05 - 11 Nov", transaksiMember: 172, transaksiNonMember: 128, totalTransaksi: 300, omsetMember: 3182000, totalOmset: 5400000 },
+  { minggu: "W7", label: "12 - 18 Nov", transaksiMember: 198, transaksiNonMember: 132, totalTransaksi: 330, omsetMember: 3762000, totalOmset: 6105000 },
+  { minggu: "W8 (Est)", label: "19 - 25 Nov", transaksiMember: 225, transaksiNonMember: 135, totalTransaksi: 360, omsetMember: 4275000, totalOmset: 6660000 },
+];
+
+export const INITIAL_DEMO_TOP_MENUS: TopMenuItem[] = [
+  { rank: 1, nama: "Indomie Goreng Dok-dok Spesial", kategori: "Makanan", porsi: 142, hargaSatuan: 16000, totalOmset: 2272000, kontribusiPersen: 32 },
+  { rank: 2, nama: "Es Teh Manis Jumbo", kategori: "Minuman", porsi: 210, hargaSatuan: 5000, totalOmset: 1050000, kontribusiPersen: 25 },
+  { rank: 3, nama: "Magelangan Telur Orak-Arik", kategori: "Makanan", porsi: 98, hargaSatuan: 16000, totalOmset: 1568000, kontribusiPersen: 18 },
+  { rank: 4, nama: "Nasi Ayam Geprek Sambal Korek", kategori: "Spesial", porsi: 84, hargaSatuan: 18000, totalOmset: 1512000, kontribusiPersen: 15 },
+  { rank: 5, nama: "Nutrisari Jeruk Peras Dingin", kategori: "Minuman", porsi: 76, hargaSatuan: 6000, totalOmset: 456000, kontribusiPersen: 10 },
+];
+
+export const INITIAL_DEMO_REACTIVATION_STATS: {
+  totalTerkirim: number;
+  totalReaktivasi: number;
+  konversiKeseluruhan: number;
+  totalOmsetReaktivasi: number;
+  items: ReactivationMetricItem[];
+} = {
+  totalTerkirim: 67,
+  totalReaktivasi: 29,
+  konversiKeseluruhan: 43.3,
+  totalOmsetReaktivasi: 1425000,
+  items: [
+    {
+      namaKampanye: "Broadcast Begadang Nugas",
+      jenis: "Begadang Nugas",
+      totalSent: 42,
+      totalWinBack: 18,
+      konversiRate: 42.8,
+      estimasiOmset: 882000,
+    },
+    {
+      namaKampanye: "Template Sapaan Kangen (/kangen)",
+      jenis: "Kangen Nongkrong",
+      totalSent: 15,
+      totalWinBack: 7,
+      konversiRate: 46.7,
+      estimasiOmset: 364000,
+    },
+    {
+      namaKampanye: "Insentif Es Teh Gratis (/insentif)",
+      jenis: "Insentif Es Teh",
+      totalSent: 10,
+      totalWinBack: 4,
+      konversiRate: 40.0,
+      estimasiOmset: 179000,
+    },
+  ],
+};
