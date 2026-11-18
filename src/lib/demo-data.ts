@@ -1,5 +1,6 @@
 import type { Customer } from "@/types/database.types";
 import type { TransactionRecord } from "@/types/transaction.record";
+import type { TicketRecord } from "@/types/ticket.record";
 
 export const INITIAL_DEMO_CUSTOMERS: Customer[] = [
   {
@@ -95,5 +96,50 @@ export const INITIAL_DEMO_TRANSACTIONS: TransactionRecord[] = [
     kompensasi_diberikan: false,
     stempel_ditambahkan: 1,
     stempel_saat_ini: 3,
+  },
+];
+
+export const INITIAL_DEMO_TICKETS: TicketRecord[] = [
+  {
+    id: "TK-001",
+    customer_id: "e4a1c5d0-9f3b-4c8d-8a1e-2f3b4c5d6e7f",
+    customer_nama: "Dimas Anggara",
+    customer_wa: "081234564321",
+    kategori: "Waktu Tunggu",
+    deskripsi_keluhan: "Pesanan mie goreng dok-dok meja 4 belum tersaji setelah 22 menit.",
+    pic: "Dapur",
+    status: "Baru",
+    waktu_masuk: new Date(now - 14 * 60 * 1000).toISOString(),
+    waktu_selesai: null,
+    diselesaikan_di_tempat: true,
+    pesan_konfirmasi_terkirim: false,
+  },
+  {
+    id: "TK-002",
+    customer_id: "f5b2d6e1-0a4c-5d9e-9b2f-3a4b5c6d7e8a",
+    customer_nama: "Clara Vania",
+    customer_wa: "081912348890",
+    kategori: "Salah Pesanan",
+    deskripsi_keluhan: "Minta telur setengah matang tetapi tersaji matang. Sedang dibuatkan pengganti.",
+    pic: "Lantai",
+    status: "Diproses",
+    waktu_masuk: new Date(now - 22 * 60 * 1000).toISOString(),
+    waktu_selesai: null,
+    diselesaikan_di_tempat: true,
+    pesan_konfirmasi_terkirim: false,
+  },
+  {
+    id: "TK-003",
+    customer_id: "b7d4f8a3-2c6e-7f1a-1d4b-5c6d7e8f0a1c",
+    customer_nama: "Farhan Hakim",
+    customer_wa: "082155557788",
+    kategori: "Fasilitas",
+    deskripsi_keluhan: "Tisu dan saus di meja 8 habis, staf lantai telah mengisi ulang.",
+    pic: "Lantai",
+    status: "Selesai",
+    waktu_masuk: new Date(now - 60 * 60 * 1000).toISOString(),
+    waktu_selesai: new Date(now - 50 * 60 * 1000).toISOString(),
+    diselesaikan_di_tempat: true,
+    pesan_konfirmasi_terkirim: true,
   },
 ];
