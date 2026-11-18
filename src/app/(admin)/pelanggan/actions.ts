@@ -6,59 +6,13 @@ import { customerSchema, type CustomerFormData } from "@/types/customer.schema";
 import { normalizePhoneNumber } from "@/lib/formatters";
 import type { Customer, SegmenKampus } from "@/types/database.types";
 
+import { INITIAL_DEMO_CUSTOMERS } from "@/lib/demo-data";
+
 export interface ActionResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
 }
-
-// Initial mock customers for demonstration & local testing if DB is empty
-const INITIAL_DEMO_CUSTOMERS: Customer[] = [
-  {
-    id: "e4a1c5d0-9f3b-4c8d-8a1e-2f3b4c5d6e7f",
-    nama_panggilan: "Dimas Anggara",
-    nomor_wa: "081234564321",
-    segmen: "Mahasiswa UPN",
-    setuju_promo: true,
-    label: "Member Malam",
-    stempel_loyalitas: 4,
-    terakhir_transaksi: "2026-11-16T21:30:00Z",
-    created_at: "2026-10-10T10:00:00Z",
-  },
-  {
-    id: "f5b2d6e1-0a4c-5d9e-9b2f-3a4b5c6d7e8a",
-    nama_panggilan: "Clara Vania",
-    nomor_wa: "081912348890",
-    segmen: "Mahasiswa Atma Jaya",
-    setuju_promo: true,
-    label: "Booking Meja",
-    stempel_loyalitas: 5,
-    terakhir_transaksi: "2026-11-15T13:15:00Z",
-    created_at: "2026-10-15T11:20:00Z",
-  },
-  {
-    id: "a6c3e7f2-1b5d-6e0f-0c3a-4b5c6d7e8f9b",
-    nama_panggilan: "Rizky Pratama",
-    nomor_wa: "085798761122",
-    segmen: "Umum",
-    setuju_promo: false,
-    label: "Pelanggan Pasif",
-    stempel_loyalitas: 1,
-    terakhir_transaksi: "2026-11-01T19:00:00Z",
-    created_at: "2026-09-20T14:40:00Z",
-  },
-  {
-    id: "b7d4f8a3-2c6e-7f1a-1d4b-5c6d7e8f0a1c",
-    nama_panggilan: "Farhan Hakim",
-    nomor_wa: "082155557788",
-    segmen: "Mahasiswa UPN",
-    setuju_promo: true,
-    label: "Member Malam",
-    stempel_loyalitas: 3,
-    terakhir_transaksi: "2026-11-17T22:10:00Z",
-    created_at: "2026-10-28T09:15:00Z",
-  },
-];
 
 /**
  * Fetch customers with optional search term (by Name or WhatsApp last 4 digits)
