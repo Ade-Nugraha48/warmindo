@@ -74,3 +74,16 @@ export function formatRupiah(amount: number): string {
     maximumFractionDigits: 0,
   }).format(amount);
 }
+
+/**
+ * Generates direct wa.me link with normalized Indonesian phone and encoded text
+ */
+export function formatWaUrl(phone: string, message: string): string {
+  let cleaned = phone.replace(/\D/g, "");
+  if (cleaned.startsWith("0")) {
+    cleaned = "62" + cleaned.slice(1);
+  } else if (cleaned.startsWith("8")) {
+    cleaned = "62" + cleaned;
+  }
+  return `https://wa.me/${cleaned}?text=${encodeURIComponent(message)}`;
+}

@@ -1,6 +1,7 @@
 import type { Customer } from "@/types/database.types";
 import type { TransactionRecord } from "@/types/transaction.record";
 import type { TicketRecord } from "@/types/ticket.record";
+import type { CampaignLogRecord } from "@/types/campaign.record";
 
 export const INITIAL_DEMO_CUSTOMERS: Customer[] = [
   {
@@ -33,7 +34,7 @@ export const INITIAL_DEMO_CUSTOMERS: Customer[] = [
     setuju_promo: false,
     label: "Pelanggan Pasif",
     stempel_loyalitas: 1,
-    terakhir_transaksi: "2026-11-01T19:00:00Z",
+    terakhir_transaksi: "2026-11-01T19:00:00Z", // 17 days ago
     created_at: "2026-09-20T14:40:00Z",
   },
   {
@@ -46,6 +47,50 @@ export const INITIAL_DEMO_CUSTOMERS: Customer[] = [
     stempel_loyalitas: 3,
     terakhir_transaksi: "2026-11-17T22:10:00Z",
     created_at: "2026-10-28T09:15:00Z",
+  },
+  {
+    id: "c8e5a9b4-3d7f-8a2b-2e5c-6d7e8f0a1b2c",
+    nama_panggilan: "Bayu Setiawan",
+    nomor_wa: "085678901234",
+    segmen: "Mahasiswa UPN",
+    setuju_promo: true,
+    label: "Member Malam",
+    stempel_loyalitas: 3,
+    terakhir_transaksi: "2026-10-30T22:00:00Z", // 19 days ago
+    created_at: "2026-09-10T12:00:00Z",
+  },
+  {
+    id: "d9f6b0c5-4e8a-9b3c-3f6d-7e8f0a1b2c3d",
+    nama_panggilan: "Anisa Rahma",
+    nomor_wa: "089876543210",
+    segmen: "Mahasiswa Atma Jaya",
+    setuju_promo: false,
+    label: "Pelanggan Pasif",
+    stempel_loyalitas: 2,
+    terakhir_transaksi: "2026-10-14T18:00:00Z", // 35 days ago
+    created_at: "2026-08-15T10:00:00Z",
+  },
+  {
+    id: "ea07c1d6-5f9b-0c4d-4a7e-8f9a1b2c3d4e",
+    nama_panggilan: "Fajar Nugraha",
+    nomor_wa: "081234567890",
+    segmen: "Mahasiswa UPN",
+    setuju_promo: true,
+    label: "Member Malam",
+    stempel_loyalitas: 4,
+    terakhir_transaksi: "2026-10-28T23:15:00Z", // 21 days ago
+    created_at: "2026-09-01T15:00:00Z",
+  },
+  {
+    id: "fb18d2e7-6a0c-1d5e-5b8f-9a0b1c2d3e4f",
+    nama_panggilan: "Siti Nurhaliza",
+    nomor_wa: "087712349900",
+    segmen: "Umum",
+    setuju_promo: true,
+    label: "Pelanggan Pasif",
+    stempel_loyalitas: 1,
+    terakhir_transaksi: "2026-10-07T14:30:00Z", // 42 days ago
+    created_at: "2026-07-20T11:00:00Z",
   },
 ];
 
@@ -141,5 +186,35 @@ export const INITIAL_DEMO_TICKETS: TicketRecord[] = [
     waktu_selesai: new Date(now - 50 * 60 * 1000).toISOString(),
     diselesaikan_di_tempat: true,
     pesan_konfirmasi_terkirim: true,
+  },
+];
+
+export const INITIAL_DEMO_CAMPAIGN_LOGS: CampaignLogRecord[] = [
+  {
+    id: "CMP-001",
+    customer_id: "ea07c1d6-5f9b-0c4d-4a7e-8f9a1b2c3d4e",
+    customer_nama: "Fajar Nugraha",
+    customer_wa: "081234567890",
+    jenis_kampanye: "Begadang Nugas",
+    waktu_kirim: "2026-11-14T22:00:00Z",
+    berhasil_reaktivasi: true,
+  },
+  {
+    id: "CMP-002",
+    customer_id: "c8e5a9b4-3d7f-8a2b-2e5c-6d7e8f0a1b2c",
+    customer_nama: "Bayu Setiawan",
+    customer_wa: "085678901234",
+    jenis_kampanye: "Insentif Es Teh",
+    waktu_kirim: "2026-11-10T14:30:00Z",
+    berhasil_reaktivasi: false,
+  },
+  {
+    id: "CMP-003",
+    customer_id: "e4a1c5d0-9f3b-4c8d-8a1e-2f3b4c5d6e7f",
+    customer_nama: "Dimas Anggara",
+    customer_wa: "081234564321",
+    jenis_kampanye: "Kangen Nongkrong",
+    waktu_kirim: "2026-11-05T19:00:00Z",
+    berhasil_reaktivasi: true,
   },
 ];
