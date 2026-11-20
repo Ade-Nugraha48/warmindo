@@ -1,14 +1,16 @@
 import * as React from "react";
 import { connection } from "next/server";
-import { getPassiveCustomers, getCampaignLogs } from "@/app/(admin)/promo/actions";
+import {
+  getPassiveCustomers,
+  getCampaignLogs,
+} from "@/app/(admin)/promo/actions";
 import { PromoManagementView } from "@/components/features/PromoManagementView";
+import { AdminPageSkeleton } from "@/components/shared/AdminPageSkeleton";
 
-export const instant = false;
-
-export default async function PromoPage() {
+async function PromoContent() {
   await connection();
   const [initialPassiveCustomers, initialCampaignLogs] = await Promise.all([
-    getPassiveCustomers(0), // Fetch all customers to populate KPI metrics and client filtering
+    getPassiveCustomers(0),
     getCampaignLogs(),
   ]);
 
@@ -17,5 +19,13 @@ export default async function PromoPage() {
       initialPassiveCustomers={initialPassiveCustomers}
       initialCampaignLogs={initialCampaignLogs}
     />
+  );
+}
+
+export default function PromoPage() {
+  return (
+    <React.Suspense fallback={<AdminPageSkeleton />}>
+      <PromoContent />
+    </React.Suspense>
   );
 }

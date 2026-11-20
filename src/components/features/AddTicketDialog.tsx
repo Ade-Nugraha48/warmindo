@@ -1,9 +1,17 @@
 "use client";
 
 import * as React from "react";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Ticket, AlertCircle, Loader2, CheckCircle2 } from "lucide-react";
+import {
+  AlertCircle,
+  CheckCircle2,
+  Loader2,
+  Plus,
+} from "lucide-react";
+import { Controller, useForm } from "react-hook-form";
+import { createTicket } from "@/app/(admin)/keluhan/actions";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -13,20 +21,39 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ticketSchema, type TicketFormData } from "@/types/ticket.schema";
-import { createTicket } from "@/app/(admin)/keluhan/actions";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { INITIAL_DEMO_CUSTOMERS } from "@/lib/demo-data";
 import { maskPhoneNumber } from "@/lib/formatters";
-import type { TicketRecord } from "@/types/ticket.record";
 import type { Customer } from "@/types/database.types";
+import type { TicketRecord } from "@/types/ticket.record";
+import { ticketSchema, type TicketFormData } from "@/types/ticket.schema";
 
 interface AddTicketDialogProps {
   onTicketAdded?: (ticket: TicketRecord) => void;
   customers?: Customer[];
 }
+
+const KATEGORI_OPTIONS = [
+  { value: "Waktu Tunggu", label: "Waktu Tunggu (SLA)" },
+  { value: "Salah Pesanan", label: "Salah Pesanan / Racik" },
+  { value: "Fasilitas", label: "Fasilitas Meja / WiFi" },
+];
+
+const PIC_OPTIONS = [
+  { value: "Dapur", label: "Dapur" },
+  { value: "Lantai", label: "Lantai" },
+  { value: "Admin", label: "Admin / Kasir" },
+];
 
 export function AddTicketDialog({
   onTicketAdded,
@@ -36,7 +63,17 @@ export function AddTicketDialog({
   const [serverError, setServerError] = React.useState<string | null>(null);
   const [successMsg, setSuccessMsg] = React.useState<string | null>(null);
 
+  const customerOptions = React.useMemo(
+    () =>
+      customers.map((c) => ({
+        value: c.id,
+        label: `${c.nama_panggilan} (${maskPhoneNumber(c.nomor_wa)})`,
+      })),
+    [customers]
+  );
+
   const {
+    control,
     register,
     handleSubmit,
     reset,
@@ -49,6 +86,8 @@ export function AddTicketDialog({
       deskripsi_keluhan: "",
       pic: "Dapur",
       diselesaikan_di_tempat: true,
+      nomor_meja: "Meja 05",
+      kompensasi_item: "1x Es Teh Jumbo Solo (Rp 0)",
     },
   });
 
@@ -62,7 +101,9 @@ export function AddTicketDialog({
       return;
     }
 
-    setSuccessMsg(`Tiket keluhan #${res.data.id} berhasil dicatat!`);
+    setSuccessMsg(
+      `Tiket keluhan ${res.data.kode_tiket || res.data.id} berhasil dicatat!`
+    );
     reset();
 
     if (onTicketAdded) {
@@ -72,7 +113,7 @@ export function AddTicketDialog({
     setTimeout(() => {
       setSuccessMsg(null);
       setOpen(false);
-    }, 1200);
+    }, 1000);
   };
 
   const handleOpenChange = (newOpen: boolean) => {
@@ -88,155 +129,194 @@ export function AddTicketDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger
         render={
-          <Button className="bg-amber-600 hover:bg-amber-700 text-white font-medium shadow-xs gap-2">
-            <Plus className="size-4" />
-            <span>Tambah Tiket Keluhan</span>
+          <Button>
+            <Plus data-icon="inline-start" />
+            <span>Buat Tiket</span>
           </Button>
         }
       />
 
-      <DialogContent className="sm:max-w-[480px] p-6 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 font-sans">
-        <DialogHeader className="space-y-1">
-          <div className="flex items-center gap-2 text-amber-600">
-            <Ticket className="size-5" />
-            <DialogTitle className="text-lg font-bold text-zinc-900 dark:text-zinc-100">
-              Form Input Tiket Keluhan Baru
-            </DialogTitle>
-          </div>
-          <DialogDescription className="text-xs text-zinc-500">
-            Catat komplain pelanggan (waktu saji, pesanan, atau fasilitas) dan delegasikan PIC penangan (FR 4.1 – FR 4.3).
+      <DialogContent className="sm:max-w-lg font-sans">
+        <DialogHeader>
+          <DialogTitle>Buat Tiket Keluhan</DialogTitle>
+          <DialogDescription>
+            Catat keluhan pelanggan dan tentukan PIC penanganannya.
           </DialogDescription>
         </DialogHeader>
 
         {serverError && (
-          <div className="flex items-start gap-2.5 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-400">
+          <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
             <AlertCircle className="size-4 shrink-0 mt-0.5" />
             <span>{serverError}</span>
           </div>
         )}
 
         {successMsg && (
-          <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-400">
-            <CheckCircle2 className="size-4 shrink-0 text-emerald-600" />
+          <div className="flex items-center gap-2 rounded-lg border border-emerald-600/25 bg-emerald-500/10 p-3 text-xs text-emerald-700 dark:text-emerald-300 font-medium">
+            <CheckCircle2 className="size-4 shrink-0" />
             <span>{successMsg}</span>
           </div>
         )}
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-1">
-          {/* Pilih Pelanggan */}
-          <div className="space-y-1.5">
-            <Label htmlFor="customer_id" className="text-xs font-semibold">
-              Pelanggan Terkait <span className="text-red-500">*</span>
-            </Label>
-            <select
-              id="customer_id"
-              {...register("customer_id")}
-              className="w-full rounded-md border border-zinc-200 bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus:border-ring focus:ring-1 focus:ring-ring dark:border-zinc-800"
-            >
-              {customers.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.nama_panggilan} ({maskPhoneNumber(c.nomor_wa)})
-                </option>
-              ))}
-            </select>
-            {errors.customer_id && (
-              <p className="text-[11px] text-red-500">{errors.customer_id.message}</p>
-            )}
-          </div>
-
-          {/* Kategori Keluhan & PIC */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="kategori" className="text-xs font-semibold">
-                Kategori Keluhan <span className="text-red-500">*</span>
-              </Label>
-              <select
-                id="kategori"
-                {...register("kategori")}
-                className="w-full rounded-md border border-zinc-200 bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus:border-ring focus:ring-1 focus:ring-ring dark:border-zinc-800"
-              >
-                <option value="Waktu Tunggu">Waktu Tunggu</option>
-                <option value="Salah Pesanan">Salah Pesanan</option>
-                <option value="Fasilitas">Fasilitas</option>
-              </select>
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-xs">Pelanggan *</Label>
+              <Controller
+                control={control}
+                name="customer_id"
+                render={({ field }) => (
+                  <Select
+                    value={field.value}
+                    onValueChange={(v) => v && field.onChange(v)}
+                    items={customerOptions}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        {customerOptions.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
             </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="pic" className="text-xs font-semibold">
-                PIC Penanggung Jawab <span className="text-red-500">*</span>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="nomor_meja" className="text-xs">
+                Nomor Meja
               </Label>
-              <select
-                id="pic"
-                {...register("pic")}
-                className="w-full rounded-md border border-zinc-200 bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus:border-ring focus:ring-1 focus:ring-ring dark:border-zinc-800"
-              >
-                <option value="Dapur">Dapur (Koki/Masak)</option>
-                <option value="Lantai">Lantai (Pelayan/Kasir)</option>
-                <option value="Admin">Admin (Sistem/Owner)</option>
-              </select>
+              <Input
+                id="nomor_meja"
+                placeholder="Contoh: Meja 07"
+                {...register("nomor_meja")}
+                className="font-mono"
+              />
             </div>
           </div>
 
-          {/* Deskripsi Keluhan */}
-          <div className="space-y-1.5">
-            <Label htmlFor="deskripsi_keluhan" className="text-xs font-semibold">
-              Detail Deskripsi Keluhan <span className="text-red-500">*</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-xs">Kategori Keluhan *</Label>
+              <Controller
+                control={control}
+                name="kategori"
+                render={({ field }) => (
+                  <Select
+                    value={field.value}
+                    onValueChange={(v) => v && field.onChange(v)}
+                    items={KATEGORI_OPTIONS}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        {KATEGORI_OPTIONS.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-xs">PIC Penanggung Jawab *</Label>
+              <Controller
+                control={control}
+                name="pic"
+                render={({ field }) => (
+                  <Select
+                    value={field.value}
+                    onValueChange={(v) => v && field.onChange(v)}
+                    items={PIC_OPTIONS}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        {PIC_OPTIONS.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="deskripsi_keluhan" className="text-xs">
+              Deskripsi Kendala *
             </Label>
-            <Input
+            <Textarea
               id="deskripsi_keluhan"
-              placeholder="Contoh: Meja 4 minta telur 1/2 matang, tapi tersaji matang"
+              rows={3}
               {...register("deskripsi_keluhan")}
-              className={errors.deskripsi_keluhan ? "border-red-500" : ""}
+              placeholder="Contoh: Pesanan Indomie Kari Dobel Telur sudah 19 menit belum tersaji..."
+              className="text-xs"
             />
             {errors.deskripsi_keluhan && (
-              <p className="text-[11px] text-red-500">
+              <p className="text-xs text-destructive">
                 {errors.deskripsi_keluhan.message}
               </p>
             )}
           </div>
 
-          {/* Selesai di Tempat (FCR) */}
-          <div className="rounded-lg border border-zinc-200 bg-zinc-50/70 p-3 dark:border-zinc-800 dark:bg-zinc-950/40">
-            <label className="flex items-start gap-2.5 cursor-pointer text-xs">
-              <input
-                type="checkbox"
-                {...register("diselesaikan_di_tempat")}
-                className="mt-0.5 size-4 rounded border-zinc-300 text-amber-600 focus:ring-amber-500"
-              />
-              <div className="flex flex-col">
-                <span className="font-semibold text-zinc-800 dark:text-zinc-200">
-                  Target Diselesaikan di Tempat (FCR &ge; 90%)
-                </span>
-                <span className="text-[11px] text-zinc-500 mt-0.5">
-                  Centang jika komplain ditangani langsung saat pelanggan masih berada di warung.
-                </span>
-              </div>
-            </label>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="kompensasi_item" className="text-xs">
+              Kompensasi yang Disiapkan
+            </Label>
+            <Input
+              id="kompensasi_item"
+              placeholder="Contoh: 1x Es Teh Jumbo Solo (Rp 0)"
+              {...register("kompensasi_item")}
+            />
           </div>
 
-          <DialogFooter className="pt-2 sm:justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => handleOpenChange(false)}
-              disabled={isSubmitting}
-            >
-              Batal
-            </Button>
-            <Button
-              type="submit"
-              size="sm"
-              className="bg-amber-600 hover:bg-amber-700 text-white font-medium"
-              disabled={isSubmitting}
-            >
+          <Controller
+            control={control}
+            name="diselesaikan_di_tempat"
+            render={({ field }) => (
+              <div className="flex items-center gap-2.5 rounded-lg border bg-muted/40 p-2.5">
+                <Checkbox
+                  id="add-ticket-fcr"
+                  checked={Boolean(field.value)}
+                  onCheckedChange={(v) => field.onChange(Boolean(v))}
+                />
+                <Label
+                  htmlFor="add-ticket-fcr"
+                  className="text-xs font-normal cursor-pointer"
+                >
+                  Dapat diselesaikan di tempat (First Contact Resolution / FCR)
+                </Label>
+              </div>
+            )}
+          />
+
+          <DialogFooter className="pt-2">
+            <Button type="submit" disabled={isSubmitting} className="w-full">
               {isSubmitting ? (
                 <>
-                  <Loader2 className="mr-2 size-4 animate-spin" />
-                  Menyimpan...
+                  <Loader2 data-icon="inline-start" className="animate-spin" />
+                  <span>Mencatat Tiket...</span>
                 </>
               ) : (
-                "Catat Tiket"
+                <span>Simpan Tiket Keluhan</span>
               )}
             </Button>
           </DialogFooter>

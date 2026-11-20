@@ -2,14 +2,14 @@
 
 import * as React from "react";
 import {
-  Megaphone,
-  Clock,
-  ShieldCheck,
   CheckCircle2,
   ExternalLink,
   Loader2,
-  Radio,
+  Megaphone,
 } from "lucide-react";
+import { broadcastBegadangNugas } from "@/app/(admin)/promo/actions";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -18,10 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { broadcastBegadangNugas } from "@/app/(admin)/promo/actions";
-import { maskPhoneNumber, formatWaUrl } from "@/lib/formatters";
+import { formatWaUrl, maskPhoneNumber } from "@/lib/formatters";
 
 interface BroadcastModalProps {
   open: boolean;
@@ -58,78 +55,74 @@ export function BroadcastModal({
     }
   };
 
+  const handleDialogOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      setResult(null);
+    }
+    onOpenChange(nextOpen);
+  };
+
   const handleClose = () => {
-    setResult(null);
-    onOpenChange(false);
+    handleDialogOpenChange(false);
   };
 
   const getBegadangMessage = (nama: string) => {
     return (
-      `Halo Kak ${nama}! 🍜\n` +
-      `Spesial malam ini jam 22.00 WIB: promo "Begadang Nugas" di Warmindo Sumber Rizki 2!\n` +
-      `Nikmati Diskon 10% untuk semua menu Indomie & minuman pendamping nugas. Tunjukkan pesan ini ke kasir saat bayar ya! /begadangnugas`
+      `Halo Kak ${nama}.\n` +
+      `Malam ini mulai pukul 22.00 WIB ada promo Begadang Nugas di Warmindo Sumber Rizki 2 Seturan.\n` +
+      `Nikmati diskon 10% untuk semua menu Indomie dan minuman dengan menunjukkan pesan ini ke kasir. /begadang`
     );
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg font-sans">
+    <Dialog open={open} onOpenChange={handleDialogOpenChange}>
+      <DialogContent className="sm:max-w-lg font-sans">
         <DialogHeader>
-          <div className="flex items-center gap-2">
-            <div className="flex size-9 items-center justify-center rounded-lg bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300">
-              <Megaphone className="size-5" />
-            </div>
-            <div>
-              <DialogTitle className="text-lg font-bold text-zinc-900 dark:text-zinc-100">
-                Broadcast &quot;Begadang Nugas&quot;
-              </DialogTitle>
-              <DialogDescription className="text-xs text-zinc-500 dark:text-zinc-400">
-                Pemberitahuan massal diskon 10% untuk komunitas Member Malam
-              </DialogDescription>
-            </div>
-          </div>
+          <DialogTitle className="flex items-center gap-2">
+            <Megaphone className="size-4 text-primary" />
+            <span>Broadcast Begadang Nugas</span>
+          </DialogTitle>
+          <DialogDescription>
+            Kirim diskon 10% Jumat malam kepada Member Malam yang menyetujui
+            promo.
+          </DialogDescription>
         </DialogHeader>
 
         {result ? (
-          <div className="space-y-4 py-2">
-            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-800 dark:bg-emerald-950/40">
-              <div className="flex items-start gap-3">
-                <CheckCircle2 className="size-5 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
-                <div>
-                  <h4 className="text-sm font-bold text-emerald-900 dark:text-emerald-200">
-                    Broadcast Berhasil Dieksekusi!
-                  </h4>
-                  <p className="text-xs text-emerald-700 dark:text-emerald-300 mt-1">
-                    Log kampanye telah disimpan untuk {result.count} pelanggan terverifikasi. Anda dapat meninjau atau membuka tautan WhatsApp berikut untuk mengirimkan ke tiap penerima.
-                  </p>
-                </div>
+          <div className="flex flex-col gap-4">
+            <div className="rounded-lg border border-emerald-600/25 bg-emerald-500/10 p-3.5 flex items-start gap-2.5 text-emerald-800 dark:text-emerald-200">
+              <CheckCircle2 className="size-4 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
+              <div className="text-xs">
+                <span className="font-semibold block">
+                  Log kampanye tersimpan untuk {result.count} pelanggan.
+                </span>
+                Klik Buka WA untuk mengirim pesan satu per satu.
               </div>
             </div>
 
-            <div className="max-h-60 overflow-y-auto divide-y divide-zinc-200 rounded-lg border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
+            <div className="max-h-56 overflow-y-auto divide-y divide-border rounded-lg border">
               {result.recipients.map((rec) => (
                 <div
                   key={rec.id}
-                  className="flex items-center justify-between p-3 text-xs hover:bg-zinc-50 dark:hover:bg-zinc-900/50"
+                  className="flex items-center justify-between p-3 text-xs hover:bg-muted/50 transition-colors"
                 >
                   <div>
-                    <div className="font-semibold text-zinc-900 dark:text-zinc-100">
-                      {rec.nama}
-                    </div>
-                    <div className="font-mono text-zinc-400">
+                    <div className="font-medium text-foreground">{rec.nama}</div>
+                    <div className="font-mono text-xs text-muted-foreground">
                       {maskPhoneNumber(rec.wa)}
                     </div>
                   </div>
                   <Button
-                    size="sm"
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 text-xs h-7"
+                    size="xs"
                     onClick={() => {
-                      const url = formatWaUrl(rec.wa, getBegadangMessage(rec.nama));
-                      window.open(url, "_blank");
+                      window.open(
+                        formatWaUrl(rec.wa, getBegadangMessage(rec.nama)),
+                        "_blank"
+                      );
                     }}
                   >
-                    <ExternalLink className="size-3" />
-                    Buka Chat WA
+                    <ExternalLink data-icon="inline-start" />
+                    <span>Buka WA</span>
                   </Button>
                 </div>
               ))}
@@ -142,60 +135,30 @@ export function BroadcastModal({
             </DialogFooter>
           </div>
         ) : (
-          <div className="space-y-4 py-2 text-xs">
-            {/* Meta tags */}
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100 dark:bg-purple-950 dark:text-purple-300 gap-1 font-semibold">
-                <Clock className="size-3" />
-                Jadwal: Jumat Pukul 22.00 WIB
-              </Badge>
-              <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-300 gap-1 font-semibold">
-                <ShieldCheck className="size-3" />
-                Opt-in Filter: Setuju Promo
-              </Badge>
-            </div>
-
-            {/* Target Criteria */}
-            <div className="rounded-lg border border-zinc-200 bg-zinc-50/60 p-3.5 space-y-2 dark:border-zinc-800 dark:bg-zinc-900/40">
-              <div className="font-semibold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
-                <Radio className="size-3.5 text-purple-600" />
-                Kriteria Sasaran Otomatis (FR 5.d):
+          <div className="flex flex-col gap-4 text-xs">
+            <div className="rounded-lg border bg-muted/50 p-3 flex flex-col gap-1 text-muted-foreground">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-foreground">
+                  Target Penerima
+                </span>
+                <Badge variant="secondary">Opt-in Aktif</Badge>
               </div>
-              <ul className="list-disc list-inside space-y-1 text-zinc-600 dark:text-zinc-400">
-                <li>
-                  Pelanggan dengan label{" "}
-                  <span className="font-semibold text-zinc-900 dark:text-zinc-100">
-                    &quot;Member Malam&quot;
-                  </span>
-                </li>
-                <li>
-                  Status persetujuan promosi{" "}
-                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                    Aktif (Setuju Promo = True)
-                  </span>
-                </li>
-                <li>
-                  Pemberian diskon 10% untuk transaksi larut malam di atas jam 22.00 WIB
-                </li>
-              </ul>
+              <p>
+                Label Member Malam / Begadang Nugas dengan persetujuan promo WA
+                aktif.
+              </p>
             </div>
 
-            {/* Message Preview */}
-            <div className="space-y-1.5">
-              <label className="font-semibold text-zinc-700 dark:text-zinc-300">
-                Pratinjau Pesan yang Dikirimkan:
-              </label>
-              <div className="rounded-lg border border-zinc-300 bg-zinc-100 p-3 font-mono text-[11px] leading-relaxed text-zinc-800 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 whitespace-pre-wrap">
+            <div className="flex flex-col gap-1.5">
+              <span className="font-medium text-foreground">
+                Pratinjau Pesan:
+              </span>
+              <div className="rounded-lg border bg-muted/40 p-3 text-xs leading-relaxed text-foreground whitespace-pre-wrap">
                 {getBegadangMessage("[Nama Pelanggan]")}
               </div>
             </div>
 
-            {/* Privacy Guarantee Note */}
-            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 italic">
-              *Catatan: Sistem secara otomatis mematuhi privasi pelanggan. Kontak yang tidak menyetujui promosi tidak akan menerima notifikasi ini.
-            </p>
-
-            <DialogFooter className="pt-2 gap-2">
+            <DialogFooter>
               <Button
                 type="button"
                 variant="outline"
@@ -208,17 +171,19 @@ export function BroadcastModal({
                 type="button"
                 onClick={handleBroadcast}
                 disabled={isSubmitting}
-                className="bg-purple-600 hover:bg-purple-700 text-white gap-2"
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="size-4 animate-spin" />
-                    Memproses Broadcast...
+                    <Loader2
+                      data-icon="inline-start"
+                      className="animate-spin"
+                    />
+                    <span>Memproses...</span>
                   </>
                 ) : (
                   <>
-                    <Megaphone className="size-4" />
-                    Kirim Broadcast Massal Sekarang
+                    <Megaphone data-icon="inline-start" />
+                    <span>Siapkan Broadcast</span>
                   </>
                 )}
               </Button>

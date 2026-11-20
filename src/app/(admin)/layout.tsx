@@ -1,57 +1,55 @@
 import * as React from "react";
-import { cookies } from "next/headers";
-import { createClient } from "@/lib/supabase/server";
-import { Sidebar } from "@/components/shared/Sidebar";
-import { Navbar } from "@/components/shared/Navbar";
+import { redirect } from "next/navigation";
+import { getSessionContext } from "@/lib/auth-guard";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/shared/AppSidebar";
+import { SiteHeader } from "@/components/shared/SiteHeader";
 
-export const instant = false;
+async function AdminShell({ children }: { children: React.ReactNode }) {
+  const session = await getSessionContext();
+  if (!session) {
+    redirect("/login");
+  }
 
-export default async function AdminLayout({
+  const userShift =
+    session.role === "pemilik" || session.role === "admin"
+      ? "Pemilik Outlet"
+      : session.shift === "pagi"
+      ? "Kasir Shift Pagi"
+      : "Kasir Shift Malam";
+
+  return (
+    <SidebarProvider>
+      <AppSidebar
+        userRole={session.role}
+        userName={session.userName}
+        userEmail={session.userEmail}
+        userShift={userShift}
+      />
+      <SidebarInset>
+        <SiteHeader />
+        <div className="flex flex-1 flex-col gap-6 p-4 lg:p-6">
+          {children}
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
+  );
+}
+
+export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const cookieStore = await cookies();
-  const demoRole = cookieStore.get("warmindo_demo_role")?.value;
-
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  let userRole = demoRole || "kasir";
-  let userName = demoRole
-    ? demoRole === "pemilik"
-      ? "Bpk. Rizki (Pemilik)"
-      : "Kasir Warmindo"
-    : "Staf Warmindo";
-  const userEmail = user?.email || `${userRole}@warmindo.com`;
-
-  if (user && !demoRole) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role, nama_lengkap")
-      .eq("id", user.id)
-      .single();
-
-    if (profile) {
-      userRole = profile.role;
-      userName = profile.nama_lengkap;
-    }
-  }
-
   return (
-    <div className="flex min-h-screen bg-zinc-50 dark:bg-zinc-900 font-sans">
-      {/* Desktop Sidebar */}
-      <Sidebar userRole={userRole} userName={userName} userEmail={userEmail} />
-
-      {/* Main Content Area */}
-      <div className="flex flex-1 flex-col min-w-0 overflow-hidden">
-        <Navbar userRole={userRole} userName={userName} />
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
-          {children}
-        </main>
-      </div>
-    </div>
+    <React.Suspense
+      fallback={
+        <div className="min-h-screen bg-sidebar p-2">
+          <div className="min-h-[calc(100vh-1rem)] rounded-xl bg-background border shadow-sm p-6" />
+        </div>
+      }
+    >
+      <AdminShell>{children}</AdminShell>
+    </React.Suspense>
   );
 }

@@ -1,46 +1,29 @@
 import * as React from "react";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { connection } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
+import { getSessionContext } from "@/lib/auth-guard";
 import { getDashboardAnalytics } from "@/app/(admin)/dashboard/actions";
 import { DashboardView } from "@/components/features/DashboardView";
+import { AdminPageSkeleton } from "@/components/shared/AdminPageSkeleton";
 
-export const instant = false;
-
-export default async function DashboardPage() {
+async function DashboardContent() {
   await connection();
-  const cookieStore = await cookies();
-  const demoRole = cookieStore.get("warmindo_demo_role")?.value;
-
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  let userRole = demoRole;
-
-  if (user && !demoRole) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
-    userRole = profile?.role;
-  }
-
-  // Enforce RBAC: Halaman ini hanya bisa diakses jika role = pemilik (atau admin) (FR 1.b)
-  if (userRole === "kasir") {
-    redirect("/pelanggan");
-  }
-
-  // Redirect unauthenticated user to login
-  if (!user && !userRole) {
+  const session = await getSessionContext();
+  if (!session) {
     redirect("/login");
+  }
+  if (session.role !== "pemilik" && session.role !== "admin") {
+    redirect("/transaksi");
   }
 
   const analytics = await getDashboardAnalytics();
-
   return <DashboardView analytics={analytics} />;
+}
+
+export default function DashboardPage() {
+  return (
+    <React.Suspense fallback={<AdminPageSkeleton />}>
+      <DashboardContent />
+    </React.Suspense>
+  );
 }

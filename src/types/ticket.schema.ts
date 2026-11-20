@@ -13,6 +13,8 @@ export const ticketSchema = z.object({
     error: "Pilih PIC penanggung jawab",
   }),
   diselesaikan_di_tempat: z.boolean(),
+  nomor_meja: z.string().max(20).optional(),
+  kompensasi_item: z.string().max(120).optional(),
 });
 
 export type TicketFormData = z.infer<typeof ticketSchema>;

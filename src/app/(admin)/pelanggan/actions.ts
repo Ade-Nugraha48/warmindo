@@ -1,11 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { connection } from "next/server";
+import { requireSession } from "@/lib/auth-guard";
 import { createClient } from "@/lib/supabase/server";
 import { customerSchema, type CustomerFormData } from "@/types/customer.schema";
 import { normalizePhoneNumber } from "@/lib/formatters";
 import type { Customer, SegmenKampus } from "@/types/database.types";
-
 import { INITIAL_DEMO_CUSTOMERS } from "@/lib/demo-data";
 
 export interface ActionResponse<T = unknown> {
@@ -21,12 +22,15 @@ export async function getCustomers(
   searchTerm?: string,
   segmentFilter?: string
 ): Promise<Customer[]> {
+  await connection();
+  await requireSession();
   try {
     const supabase = await createClient();
     let query = supabase
       .from("customers")
       .select("*")
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(200);
 
     if (segmentFilter && segmentFilter !== "Semua") {
       query = query.eq("segmen", segmentFilter as SegmenKampus);
@@ -39,24 +43,24 @@ export async function getCustomers(
     if (!error && data && data.length > 0) {
       customerList = data;
     } else {
-      // Fallback to initial demo dataset if database has no records yet
-      customerList = INITIAL_DEMO_CUSTOMERS;
+      customerList = [...INITIAL_DEMO_CUSTOMERS];
       if (segmentFilter && segmentFilter !== "Semua") {
         customerList = customerList.filter((c) => c.segmen === segmentFilter);
       }
     }
 
-    // Filter by name or last 4 digits of WhatsApp if search term provided
     if (searchTerm && searchTerm.trim() !== "") {
       const term = searchTerm.trim().toLowerCase();
       customerList = customerList.filter((cust) => {
         const matchesName = cust.nama_panggilan.toLowerCase().includes(term);
         const matchesWa = cust.nomor_wa.toLowerCase().includes(term);
-        // Also check last 4 digits match explicitly
         const last4 = cust.nomor_wa.slice(-4);
         const matchesLast4 = last4.includes(term);
+        const matchesFav = (cust.preferensi_racikan || "")
+          .toLowerCase()
+          .includes(term);
 
-        return matchesName || matchesWa || matchesLast4;
+        return matchesName || matchesWa || matchesLast4 || matchesFav;
       });
     }
 
@@ -76,15 +80,16 @@ export async function getCustomers(
 }
 
 /**
- * Create a new customer with duplicate phone number validation
+ * Create a new customer with duplicate phone number validation (FR 2.2)
  */
 export async function createCustomer(
   formData: CustomerFormData
 ): Promise<ActionResponse<Customer>> {
-  // Validate schema
+  await requireSession();
   const parsed = customerSchema.safeParse(formData);
   if (!parsed.success) {
-    const firstError = parsed.error.issues[0]?.message || "Data input tidak valid";
+    const firstError =
+      parsed.error.issues[0]?.message || "Data input tidak valid";
     return { success: false, error: firstError };
   }
 
@@ -93,7 +98,6 @@ export async function createCustomer(
   try {
     const supabase = await createClient();
 
-    // 1. Check for duplicate WhatsApp number in Supabase
     const { data: existing, error: checkError } = await supabase
       .from("customers")
       .select("id, nama_panggilan, nomor_wa")
@@ -107,7 +111,6 @@ export async function createCustomer(
       };
     }
 
-    // Also check demo customers list in case running without migrated DB table
     const duplicateDemo = INITIAL_DEMO_CUSTOMERS.find(
       (c) => normalizePhoneNumber(c.nomor_wa) === normalizedWa
     );
@@ -118,28 +121,57 @@ export async function createCustomer(
       };
     }
 
-    // 2. Insert into Supabase customers table
-    const newCustomerData = {
+    const basePayload = {
       nama_panggilan: parsed.data.nama_panggilan.trim(),
       nomor_wa: normalizedWa,
       segmen: parsed.data.segmen,
       setuju_promo: parsed.data.setuju_promo,
-      label: parsed.data.label?.trim() || "Pelanggan Baru",
-      stempel_loyalitas: 0,
-      terakhir_transaksi: null,
+      label: parsed.data.label?.trim() || "Member Baru",
+      stempel_loyalitas: 1,
+      terakhir_transaksi: null as string | null,
     };
 
-    const { data: inserted, error: insertError } = await supabase
+    // Try v2 insert first (with preferensi_racikan & meja_favorit)
+    const v2Payload = {
+      ...basePayload,
+      preferensi_racikan:
+        parsed.data.preferensi_racikan?.trim() ||
+        "Indomie Dok-Dok Kuah Nyemek • Level 3",
+      meja_favorit: parsed.data.meja_favorit?.trim() || "Meja 05",
+      total_kunjungan: 1,
+      total_belanja: 0,
+    };
+
+    let inserted: Customer | null = null;
+    const { data: v2Data, error: v2Err } = await supabase
       .from("customers")
-      .insert(newCustomerData)
+      .insert(v2Payload)
       .select()
       .single();
 
-    if (insertError) {
-      // If table doesn't exist yet or connection fails, return mock inserted customer for UI test
+    if (!v2Err && v2Data) {
+      inserted = v2Data;
+    } else {
+      // Fallback to v1 columns (and v1 enum fallback if YKPN not migrated yet)
+      const v1Segmen =
+        basePayload.segmen === "Mahasiswa YKPN"
+          ? ("Umum" as SegmenKampus)
+          : basePayload.segmen;
+      const { data: v1Data } = await supabase
+        .from("customers")
+        .insert({
+          ...basePayload,
+          segmen: v1Segmen,
+        })
+        .select()
+        .single();
+      inserted = v1Data;
+    }
+
+    if (!inserted) {
       const mockInserted: Customer = {
         id: crypto.randomUUID(),
-        ...newCustomerData,
+        ...v2Payload,
         created_at: new Date().toISOString(),
       };
       INITIAL_DEMO_CUSTOMERS.unshift(mockInserted);
@@ -156,4 +188,32 @@ export async function createCustomer(
       error: "Gagal menyimpan data pelanggan. Coba beberapa saat lagi.",
     };
   }
+}
+
+/**
+ * Toggle promo opt-in consent for a customer
+ */
+export async function toggleCustomerPromoConsent(
+  customerId: string,
+  setujuPromo: boolean
+): Promise<{ success: boolean }> {
+  await requireSession();
+  try {
+    const supabase = await createClient();
+    await supabase
+      .from("customers")
+      .update({ setuju_promo: setujuPromo })
+      .eq("id", customerId);
+  } catch {
+    // Fallback below
+  }
+
+  const demoCust = INITIAL_DEMO_CUSTOMERS.find((c) => c.id === customerId);
+  if (demoCust) {
+    demoCust.setuju_promo = setujuPromo;
+  }
+
+  revalidatePath("/pelanggan");
+  revalidatePath("/promo");
+  return { success: true };
 }

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { connection } from "next/server";
+import { requireSession } from "@/lib/auth-guard";
 import { createClient } from "@/lib/supabase/server";
 import { INITIAL_DEMO_CUSTOMERS, INITIAL_DEMO_CAMPAIGN_LOGS } from "@/lib/demo-data";
 import type { JenisKampanye } from "@/types/database.types";
@@ -18,12 +19,16 @@ export async function getPassiveCustomers(
   filterLabel?: string
 ): Promise<PassiveCustomer[]> {
   await connection();
+  await requireSession();
   try {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("customers")
-      .select("*")
-      .order("terakhir_transaksi", { ascending: true, nullsFirst: true });
+      .select(
+        "id, nama_panggilan, nomor_wa, segmen, label, setuju_promo, stempel_loyalitas, terakhir_transaksi, created_at"
+      )
+      .order("terakhir_transaksi", { ascending: true, nullsFirst: true })
+      .limit(200);
 
     const rawCustomers = (!error && data && data.length > 0) ? data : DEMO_CUSTOMERS;
     const now = Date.now();
@@ -113,6 +118,7 @@ export async function recordCampaignLog(
   customerNama: string,
   customerWa: string
 ): Promise<{ success: boolean; message: string }> {
+  await requireSession();
   const newLog: CampaignLogRecord = {
     id: `CMP-${Date.now().toString().slice(-4)}`,
     customer_id: customerId,
@@ -145,6 +151,7 @@ export async function recordCampaignLog(
 
   DEMO_CAMPAIGN_LOGS.unshift(newLog);
   revalidatePath("/promo");
+  revalidatePath("/quick-replies");
   return { success: true, message: `Pesan ${jenis} tercatat untuk ${customerNama}.` };
 }
 
@@ -157,13 +164,15 @@ export async function broadcastBegadangNugas(): Promise<{
   count: number;
   recipients: { id: string; nama: string; wa: string }[];
 }> {
+  await requireSession();
   try {
     const supabase = await createClient();
     const { data: dbRecipients } = await supabase
       .from("customers")
       .select("id, nama_panggilan, nomor_wa, setuju_promo, label")
       .eq("label", "Member Malam")
-      .eq("setuju_promo", true);
+      .eq("setuju_promo", true)
+      .limit(200);
 
     const targetList = (dbRecipients && dbRecipients.length > 0)
       ? dbRecipients.map((r) => ({
@@ -214,6 +223,7 @@ export async function broadcastBegadangNugas(): Promise<{
     }
 
     revalidatePath("/promo");
+    revalidatePath("/quick-replies");
 
     return {
       success: true,
@@ -253,6 +263,7 @@ export async function broadcastBegadangNugas(): Promise<{
     });
 
     revalidatePath("/promo");
+    revalidatePath("/quick-replies");
 
     return {
       success: true,
@@ -267,6 +278,7 @@ export async function broadcastBegadangNugas(): Promise<{
  * Fetch campaign history logs
  */
 export async function getCampaignLogs(): Promise<CampaignLogRecord[]> {
+  await requireSession();
   try {
     const supabase = await createClient();
     const { data, error } = await supabase

@@ -8,11 +8,18 @@ export type Json =
 
 // Enum Types
 export type UserRole = "admin" | "kasir" | "pemilik";
-export type SegmenKampus = "Mahasiswa UPN" | "Mahasiswa Atma Jaya" | "Umum";
+export type SegmenKampus =
+  | "Mahasiswa UPN"
+  | "Mahasiswa YKPN"
+  | "Mahasiswa Atma Jaya"
+  | "Umum";
 export type KategoriTiket = "Waktu Tunggu" | "Salah Pesanan" | "Fasilitas";
 export type PicTiket = "Dapur" | "Lantai" | "Admin";
 export type StatusTiket = "Baru" | "Diproses" | "Selesai";
-export type JenisKampanye = "Kangen Nongkrong" | "Insentif Es Teh" | "Begadang Nugas";
+export type JenisKampanye =
+  | "Kangen Nongkrong"
+  | "Insentif Es Teh"
+  | "Begadang Nugas";
 
 export interface Database {
   public: {
@@ -23,18 +30,24 @@ export interface Database {
           role: UserRole;
           nama_lengkap: string;
           created_at: string | null;
+          username?: string | null;
+          shift_default?: string | null;
         };
         Insert: {
           id: string;
           role?: UserRole;
           nama_lengkap: string;
           created_at?: string | null;
+          username?: string | null;
+          shift_default?: string | null;
         };
         Update: {
           id?: string;
           role?: UserRole;
           nama_lengkap?: string;
           created_at?: string | null;
+          username?: string | null;
+          shift_default?: string | null;
         };
         Relationships: [];
       };
@@ -49,6 +62,10 @@ export interface Database {
           stempel_loyalitas: number | null;
           terakhir_transaksi: string | null;
           created_at: string | null;
+          preferensi_racikan?: string | null;
+          meja_favorit?: string | null;
+          total_kunjungan?: number | null;
+          total_belanja?: number | null;
         };
         Insert: {
           id?: string;
@@ -60,6 +77,10 @@ export interface Database {
           stempel_loyalitas?: number | null;
           terakhir_transaksi?: string | null;
           created_at?: string | null;
+          preferensi_racikan?: string | null;
+          meja_favorit?: string | null;
+          total_kunjungan?: number | null;
+          total_belanja?: number | null;
         };
         Update: {
           id?: string;
@@ -71,6 +92,10 @@ export interface Database {
           stempel_loyalitas?: number | null;
           terakhir_transaksi?: string | null;
           created_at?: string | null;
+          preferensi_racikan?: string | null;
+          meja_favorit?: string | null;
+          total_kunjungan?: number | null;
+          total_belanja?: number | null;
         };
         Relationships: [];
       };
@@ -86,6 +111,17 @@ export interface Database {
           is_jam_sibuk: boolean | null;
           kompensasi_diberikan: boolean | null;
           stempel_ditambahkan: number | null;
+          kode_order?: string | null;
+          nomor_meja?: string | null;
+          tipe_pesanan?: string | null;
+          status_dapur?: string | null;
+          stasiun_dapur?: string | null;
+          koki_pic?: string | null;
+          catatan_pesanan?: string | null;
+          metode_bayar?: string | null;
+          diskon_nominal?: number | null;
+          shift?: string | null;
+          order_items_json?: Json | null;
         };
         Insert: {
           id?: string;
@@ -98,6 +134,17 @@ export interface Database {
           is_jam_sibuk?: boolean | null;
           kompensasi_diberikan?: boolean | null;
           stempel_ditambahkan?: number | null;
+          kode_order?: string | null;
+          nomor_meja?: string | null;
+          tipe_pesanan?: string | null;
+          status_dapur?: string | null;
+          stasiun_dapur?: string | null;
+          koki_pic?: string | null;
+          catatan_pesanan?: string | null;
+          metode_bayar?: string | null;
+          diskon_nominal?: number | null;
+          shift?: string | null;
+          order_items_json?: Json | null;
         };
         Update: {
           id?: string;
@@ -110,6 +157,17 @@ export interface Database {
           is_jam_sibuk?: boolean | null;
           kompensasi_diberikan?: boolean | null;
           stempel_ditambahkan?: number | null;
+          kode_order?: string | null;
+          nomor_meja?: string | null;
+          tipe_pesanan?: string | null;
+          status_dapur?: string | null;
+          stasiun_dapur?: string | null;
+          koki_pic?: string | null;
+          catatan_pesanan?: string | null;
+          metode_bayar?: string | null;
+          diskon_nominal?: number | null;
+          shift?: string | null;
+          order_items_json?: Json | null;
         };
         Relationships: [
           {
@@ -133,6 +191,11 @@ export interface Database {
           waktu_selesai: string | null;
           diselesaikan_di_tempat: boolean | null;
           pesan_konfirmasi_terkirim: boolean | null;
+          kode_tiket?: string | null;
+          nomor_meja?: string | null;
+          transaction_id?: string | null;
+          kompensasi_item?: string | null;
+          kronologi_audit?: Json | null;
         };
         Insert: {
           id?: string;
@@ -145,6 +208,11 @@ export interface Database {
           waktu_selesai?: string | null;
           diselesaikan_di_tempat?: boolean | null;
           pesan_konfirmasi_terkirim?: boolean | null;
+          kode_tiket?: string | null;
+          nomor_meja?: string | null;
+          transaction_id?: string | null;
+          kompensasi_item?: string | null;
+          kronologi_audit?: Json | null;
         };
         Update: {
           id?: string;
@@ -157,6 +225,11 @@ export interface Database {
           waktu_selesai?: string | null;
           diselesaikan_di_tempat?: boolean | null;
           pesan_konfirmasi_terkirim?: boolean | null;
+          kode_tiket?: string | null;
+          nomor_meja?: string | null;
+          transaction_id?: string | null;
+          kompensasi_item?: string | null;
+          kronologi_audit?: Json | null;
         };
         Relationships: [
           {
@@ -221,6 +294,90 @@ export interface Database {
         };
         Relationships: [];
       };
+      menu_items: {
+        Row: {
+          id: string;
+          kode_menu: string;
+          nama: string;
+          kategori: string;
+          deskripsi: string;
+          harga: number;
+          estimasi_menit: string | null;
+          stasiun_default: string | null;
+          badge_tag: string | null;
+          gambar_url: string | null;
+          is_available: boolean | null;
+          created_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          kode_menu: string;
+          nama: string;
+          kategori: string;
+          deskripsi: string;
+          harga: number;
+          estimasi_menit?: string | null;
+          stasiun_default?: string | null;
+          badge_tag?: string | null;
+          gambar_url?: string | null;
+          is_available?: boolean | null;
+          created_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          kode_menu?: string;
+          nama?: string;
+          kategori?: string;
+          deskripsi?: string;
+          harga?: number;
+          estimasi_menit?: string | null;
+          stasiun_default?: string | null;
+          badge_tag?: string | null;
+          gambar_url?: string | null;
+          is_available?: boolean | null;
+          created_at?: string | null;
+        };
+        Relationships: [];
+      };
+      wa_quick_replies: {
+        Row: {
+          id: string;
+          shortcut: string;
+          judul: string;
+          kategori: string;
+          isi_pesan: string;
+          trigger_mode: string | null;
+          keyboard_shortcut: string | null;
+          usage_count: number | null;
+          is_primary_kasir: boolean | null;
+          created_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          shortcut: string;
+          judul: string;
+          kategori: string;
+          isi_pesan: string;
+          trigger_mode?: string | null;
+          keyboard_shortcut?: string | null;
+          usage_count?: number | null;
+          is_primary_kasir?: boolean | null;
+          created_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          shortcut?: string;
+          judul?: string;
+          kategori?: string;
+          isi_pesan?: string;
+          trigger_mode?: string | null;
+          keyboard_shortcut?: string | null;
+          usage_count?: number | null;
+          is_primary_kasir?: boolean | null;
+          created_at?: string | null;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -242,11 +399,7 @@ export interface Database {
   };
 }
 
-// Convenience Type Aliases for Tables
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
-export type ProfileInsert = Database["public"]["Tables"]["profiles"]["Insert"];
-export type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"];
-
 export type Customer = Database["public"]["Tables"]["customers"]["Row"];
 export type CustomerInsert = Database["public"]["Tables"]["customers"]["Insert"];
 export type CustomerUpdate = Database["public"]["Tables"]["customers"]["Update"];
@@ -260,9 +413,6 @@ export type TicketInsert = Database["public"]["Tables"]["tickets"]["Insert"];
 export type TicketUpdate = Database["public"]["Tables"]["tickets"]["Update"];
 
 export type CampaignLog = Database["public"]["Tables"]["campaign_logs"]["Row"];
-export type CampaignLogInsert = Database["public"]["Tables"]["campaign_logs"]["Insert"];
-export type CampaignLogUpdate = Database["public"]["Tables"]["campaign_logs"]["Update"];
-
 export type WaResponseLog = Database["public"]["Tables"]["wa_response_logs"]["Row"];
-export type WaResponseLogInsert = Database["public"]["Tables"]["wa_response_logs"]["Insert"];
-export type WaResponseLogUpdate = Database["public"]["Tables"]["wa_response_logs"]["Update"];
+export type MenuItemRow = Database["public"]["Tables"]["menu_items"]["Row"];
+export type WaQuickReplyRow = Database["public"]["Tables"]["wa_quick_replies"]["Row"];

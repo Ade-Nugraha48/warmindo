@@ -1,37 +1,22 @@
+import * as React from "react";
 import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
-import { createClient } from "@/lib/supabase/server";
+import { getSessionContext } from "@/lib/auth-guard";
 
-export const instant = false;
-
-export default async function HomePage() {
-  const cookieStore = await cookies();
-  const demoRole = cookieStore.get("warmindo_demo_role")?.value;
-
-  if (demoRole === "pemilik" || demoRole === "admin") {
-    redirect("/dashboard");
-  } else if (demoRole === "kasir") {
-    redirect("/pelanggan");
-  }
-
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
+async function RootRedirect(): Promise<React.ReactNode> {
+  const session = await getSessionContext();
+  if (!session) {
     redirect("/login");
   }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  if (profile?.role === "pemilik" || profile?.role === "admin") {
+  if (session.role === "pemilik" || session.role === "admin") {
     redirect("/dashboard");
-  } else {
-    redirect("/pelanggan");
   }
+  redirect("/transaksi");
+}
+
+export default function HomePage() {
+  return (
+    <React.Suspense fallback={<div className="min-h-screen bg-background" />}>
+      <RootRedirect />
+    </React.Suspense>
+  );
 }

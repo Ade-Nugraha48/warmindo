@@ -2,12 +2,35 @@ import * as React from "react";
 import { connection } from "next/server";
 import { getCustomers } from "@/app/(admin)/pelanggan/actions";
 import { CustomerManagementView } from "@/components/features/CustomerManagementView";
+import { AdminPageSkeleton } from "@/components/shared/AdminPageSkeleton";
 
-export const instant = false;
-
-export default async function PelangganPage() {
+async function PelangganContent({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
   await connection();
-  const initialCustomers = await getCustomers();
+  const [{ q }, initialCustomers] = await Promise.all([
+    searchParams,
+    getCustomers(),
+  ]);
 
-  return <CustomerManagementView initialCustomers={initialCustomers} />;
+  return (
+    <CustomerManagementView
+      initialCustomers={initialCustomers}
+      initialSearchQuery={q || ""}
+    />
+  );
+}
+
+export default function PelangganPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  return (
+    <React.Suspense fallback={<AdminPageSkeleton />}>
+      <PelangganContent searchParams={searchParams} />
+    </React.Suspense>
+  );
 }
